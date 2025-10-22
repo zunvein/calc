@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kalkulator — HTML only</title>
+  <style>
+    :root{
+      --bg:#0f1724;
+      --panel:#0b1220;
+      --accent:#7c3aed;
+      --muted:#94a3b8;
+      --glass: rgba(255,255,255,0.04);
+      --btn-hover: rgba(255,255,255,0.06);
+      font-synthesis: none;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:
+        radial-gradient(1200px 600px at 10% 10%, rgba(124,58,237,0.12), transparent 10%),
+        radial-gradient(1000px 500px at 90% 90%, rgba(14,165,233,0.06), transparent 10%),
+        var(--bg);
+      color:#e6eef8;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+
+    .calc {
+      width: min(420px, 96vw);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:18px;
+      box-shadow: 0 8px 30px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+      overflow:clip;
+      border: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .top {
+      padding:18px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+    }
+
+    .brand {
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .logo {
+      width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#06b6d4);
+      display:flex;align-items:center;justify-content:center;font-weight:700;color:white;
+      box-shadow: 0 4px 18px rgba(124,58,237,0.18);
+      font-family: ui-rounded, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    .title{
+      line-height:1;
+    }
+    .title b{display:block;font-size:14px}
+    .title small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+
+    .display {
+      padding:18px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));
+      min-height:96px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      justify-content:center;
+      align-items:flex-end;
+    }
+
+    .expression {
+      color:var(--muted);
+      font-size:16px;
+      word-break:break-all;
+      opacity:0.95;
+    }
+    .result {
+      font-size:28px;
+      font-weight:600;
+      letter-spacing:0.4px;
+    }
+
+    .pad {
+      padding:14px;
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap:10px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+    }
+
+    button.key {
+      background:var(--glass);
+      border:1px solid rgba(255,255,255,0.03);
+      padding:14px 12px;
+      border-radius:12px;
+      font-size:18px;
+      color:inherit;
+      cursor:pointer;
+      transition:transform .06s ease, background .12s ease;
+      user-select:none;
+      min-height:50px;
+    }
+    button.key:active{transform:translateY(1px)}
+    button.key:hover{background:var(--btn-hover)}
+    button.op { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));}
+    button.equal { background: linear-gradient(180deg, var(--accent), #06b6d4); color:white; font-weight:700; box-shadow: 0 8px 24px rgba(12,18,60,0.45); }
+    button.wide { grid-column: span 2; }
+    .muted { color:var(--muted); font-size:14px; }
+
+    footer.note{
+      padding:10px 14px;
+      font-size:12px;
+      color:var(--muted);
+      text-align:center;
+      border-top:1px dashed rgba(255,255,255,0.02);
+    }
+
+    /* focus styles for accessibility */
+    button.key:focus{outline:3px solid rgba(124,58,237,0.22); outline-offset:2px}
+
+    @media (max-width:420px){
+      .result { font-size:24px }
+      button.key { padding:12px; font-size:16px; min-height:46px }
+    }
+  </style>
+</head>
+<body>
+  <main class="calc" role="application" aria-label="Kalkulator">
+    <div class="top">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">Σ</div>
+        <div class="title">
+          <b>Kalkulator</b>
+          <small>HTML only — CSS di dalam file</small>
+        </div>
+      </div>
+      <div class="muted" id="kbd-hint">Keyboard: 0-9 . + - * / ( ) % Enter= = Backspace</div>
+    </div>
+
+    <section class="display" aria-live="polite">
+      <div class="expression" id="expression" aria-hidden="true">&nbsp;</div>
+      <div class="result" id="result" aria-atomic="true">0</div>
+    </section>
+
+    <div class="pad" role="group" aria-label="Tombol kalkulator">
+      <button class="key" data-action="clear" aria-label="Clear (C)">C</button>
+      <button class="key" data-action="back" aria-label="Backspace">⌫</button>
+      <button class="key op" data-value="%" aria-label="Persen">%</button>
+      <button class="key op" data-value="/" aria-label="Bagi">÷</button>
+
+      <button class="key" data-value="7">7</button>
+      <button class="key" data-value="8">8</button>
+      <button class="key" data-value="9">9</button>
+      <button class="key op" data-value="*" aria-label="Kali">×</button>
+
+      <button class="key" data-value="4">4</button>
+      <button class="key" data-value="5">5</button>
+      <button class="key" data-value="6">6</button>
+      <button class="key op" data-value="-" aria-label="Kurang">−</button>
+
+      <button class="key" data-value="1">1</button>
+      <button class="key" data-value="2">2</button>
+      <button class="key" data-value="3">3</button>
+      <button class="key op" data-value="+" aria-label="Tambah">+</button>
+
+      <button class="key" data-value="(" aria-label="Kurung buka">(</button>
+      <button class="key" data-value="0">0</button>
+      <button class="key" data-value="." aria-label="Desimal">.</button>
+      <button class="key" data-value=")" aria-label="Kurung tutup">)</button>
+
+      <button class="key wide" data-action="ans" aria-label="Masukkan hasil sebelumnya">ANS</button>
+      <button class="key equal wide" data-action="equals" aria-label="Sama dengan">=</button>
+    </div>
+
+    <footer class="note">Mendukung operator + − × ÷, persen (%), kurung. Dapat menggunakan keyboard.</footer>
+  </main>
+
+  <script>
+    (function(){
+      const exprEl = document.getElementById('expression');
+      const resEl = document.getElementById('result');
+      const keys = document.querySelectorAll('button.key');
+
+      let expr = '';
+      let lastResult = null;
+
+      function render(){
+        exprEl.textContent = expr || '\u00A0'; // non-breakingspace when empty
+        resEl.textContent = (expr.trim() === '') ? '0' : tryEvalDisplay(expr);
+      }
+
+      // show result preview without committing
+      function tryEvalDisplay(s){
+        try {
+          const v = safeEval(s);
+          if (typeof v === 'number' && !Number.isNaN(v) && Number.isFinite(v)) {
+            // format: remove trailing .0 when integer
+            return (Number.isInteger(v) ? v.toString() : v.toString());
+          }
+        } catch(e){}
+        return '\u2014'; // em dash as placeholder
+      }
+
+      // Sanitized evaluator: allow digits, operators, dot, parens, percent, spaces
+      function safeEval(input){
+        if (!input || typeof input !== 'string') throw new Error('Invalid');
+        // normalize display operators to JS operators
+        const normalized = input.replace(/÷/g, '/').replace(/×/g, '*').replace(/−/g, '-');
+
+        // reject any letters or other suspicious chars
+        if (/[^0-9+\-*/().% \t]/.test(normalized)) throw new Error('Invalid characters');
+
+        // handle percent: replace 'number%' with '(number/100)'
+        // But support chained like '50%+20' -> '(50/100)+20'
+        const withPercent = normalized.replace(/(\d+(\.\d+)?)%/g, '($1/100)');
+
+        // last safety: prevent expressions that start with operator other than - or (
+        // we let JS handle needed parsing; use Function to evaluate in strict mode
+        const fn = new Function('"use strict"; return (' + withPercent + ')');
+        const result = fn();
+        return result;
+      }
+
+      function insert(val){
+        expr += val;
+        render();
+      }
+      function clearAll(){
+        expr = '';
+        render();
+      }
+      function backspace(){
+        expr = expr.slice(0, -1);
+        render();
+      }
+      function compute(){
+        try {
+          const value = safeEval(expr);
+          if (typeof value !== 'number' || !isFinite(value) || Number.isNaN(value)) throw new Error('Result not a finite number');
+          lastResult = value;
+          expr = String(value);
+          render();
+        } catch(e){
+          resEl.textContent = 'Error';
+          // keep expression as-is for user to edit
+        }
+      }
+
+      // attach click handlers
+      keys.forEach(btn=>{
+        const v = btn.dataset.value;
+        const action = btn.dataset.action;
+        btn.addEventListener('click', ()=>{
+          if (action === 'clear') return clearAll();
+          if (action === 'back') return backspace();
+          if (action === 'equals') return compute();
+          if (action === 'ans') {
+            if (lastResult !== null) insert(String(lastResult));
+            return;
+          }
+          if (v !== undefined) insert(v);
+        });
+      });
+
+      // keyboard support
+      window.addEventListener('keydown', (ev)=>{
+        const key = ev.key;
+        // allow numbers, operators, parentheses, dot, percent, Enter, Backspace, Escape
+        if (/^[0-9+\-*/().%]$/.test(key)) {
+          ev.preventDefault();
+          insert(key);
+          return;
+        }
+        if (key === 'Enter' || key === '=') {
+          ev.preventDefault();
+          compute();
+          return;
+        }
+        if (key === 'Backspace') {
+          ev.preventDefault();
+          backspace();
+          return;
+        }
+        if (key === 'Escape' || key.toLowerCase() === 'c') {
+          ev.preventDefault();
+          clearAll();
+          return;
+        }
+      });
+
+      // nice initial render
+      render();
+
+      // expose to console for debugging (optional)
+      window._calc = {
+        get expression(){return expr},
+        set expression(v){ expr = String(v); render(); },
+        eval: compute,
+        clear: clearAll,
+      };
+    })();
+  </script>
+</body>
+</html>
